@@ -1,8 +1,8 @@
 package javaPokerGame;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -18,229 +18,318 @@ public class Hand {
 	ArrayList<Card> hand = new ArrayList<Card>();
 	Deck deck = new Deck();
 	Card card;
+	String answer;
+	String anotherCard;
 
-	ArrayList<List> handForSorting = new ArrayList<>();
-
+	// Play main method, to launch
 	public void play() {
 
 		displayWinningTable();
 		deck.drawCards();
-		deck.DeckShuffle();
 		hand = deck.dealHand();
-//		sortCards();
 		print("-----------------\n");
-		System.out.println("Your cards: ");
+		print("Your cards: ");
 		for (int i = 0; i < hand.size(); i++) {
 			card = hand.get(i);
-			System.out.println(card.getRank() + " " + card.getSuit());
-//			System.out.println("You got " + evaluateHand());
-//			System.out.println();
+			System.out.println(card.toString());
 		}
-		redrawCard();
-	}
 
-	// Nepadaryta
-	public List<String> sortCards(ArrayList<Card> hand) {
-		return null;
-
-	}
-
-	// Nepadaryta. I while neuzeina;
-	public void redrawCard() {
-		int changeCard = 0;
-		String anotherCard = "";
-		System.out.println("\nWould you like to change one or few Cards? yes / no");
-		String answer = sc.nextLine();
-
-		if (answer.toLowerCase().equals("yes")) {
-			do {
-				changeCard++;
-				System.out.println("Please tell which card would you like to change?");
-				System.out.println("Please enter number from fisrt to last. \nExp.: '1', '2','3','4','5'");
-				int changeCardRank = sc.nextInt();
-
-				for (int i = 0; i <= hand.size(); i++) {
-					if (i == changeCardRank - 1) {
-						hand.remove(i);
-						hand.add(deck.getOneCard());
-						break;
-					} else if (i > 4) {
-						System.out.println("Card can not be found");
-						changeCard--;
-					}
-				}
-
-				System.out.println("Your cards are: ");
-				for (int i = 0; i < hand.size(); i++) {
-					card = hand.get(i);
-					System.out.println(card.getRank() + " " + card.getSuit());
-				}
-				print("\nWould you like to change another Card? yes / no");
-				anotherCard = sc.nextLine();
-			} while (anotherCard.toLowerCase().equals("no") && changeCard != 5);
-			if (changeCard == 5) {
-				System.out.println();
-				System.out.println("You can not change anymore cards, only 5 cards can be changed.");
-				System.out.println("--------------------------------------------------------------");
+		while (true) {
+			print("\nWould you like to change one or few Cards? yes / no");
+			answer = sc.nextLine();
+			if (answer.toLowerCase().equals("yes")) {
+				discardCard();
+				break;
+			} else if (answer.toLowerCase().equals("no")) {
+				break;
+			} else {
+				System.out.print("Didin't catch that. Please try again..");
+				continue;
 			}
-		} else {
-			System.out.println("No cards Removed");
 		}
+		print("You got " + evaluateHand());
+		playAgain();
+
 	}
 
-//	Dalis variaciju neveikia, per String reiktu tikrinti; Arba konvertuoti, dar nezinau kaip darysiu.
-//	
-//	"All other", "Jacks or Better", "Two Pair ", "Three of a kind", "Straight",
-//	"Flush", "Full House", "Four of a kind", "Straight Flush", "Royal Flush" 
-
-	public int jacksOrBetter() {
-		String[] jackOrBettter = { "Jack", "Queen", "King" };
+	// Sorting method
+	private List<Card> sortedHand() {
+		List<Card> sortedHand = new ArrayList<Card>();
 		for (int i = 0; i < hand.size(); i++) {
-			if (hand.get(i).getRank() == jackOrBettter[0] || hand.get(i).getRank() == jackOrBettter[1]
-					|| hand.get(i).getRank() == jackOrBettter[2]) {
-				return 1;
-			}
+			sortedHand.add(hand.get(i));
 		}
-		return 0;
+
+		Collections.sort(sortedHand, new Comparator<Card>() {
+			@Override
+			public int compare(Card card1, Card card2) {
+				return card1.getRank() - card2.getRank();
+			}
+		});
+
+		return sortedHand;
 	}
 
-	public int twoPair() {
-		int count = 0;
-		for (int i = 0; i < 5; i++) {
-			if (hand.get(i).getRank() == hand.get(i).getRank()) {
-				count++;
+	// card discarding method
+	public void discardCard() {
+
+		print("Please tell which card would you like to change?");
+		print("Please enter number which card would you like to change. \nExp.: '1', '2','3','4','5'");
+		int changeCardRank = sc.nextInt();
+
+		for (int i = 0; i <= hand.size(); i++) {
+			if (i == (changeCardRank - 1)) {
+				hand.remove(i);
+				hand.add(deck.getOneCard());
 			}
 		}
-		if (count == 2) {
-			return 1;
+		sortedHand();
+		print("Your cards are: ");
+		for (int i = 0; i < hand.size(); i++) {
+			card = hand.get(i);
+			print(card.toString());
+		}
+		discardCardAgain();
+	}
+
+	// discard again, repeat action,
+	// i could have just made discarding method with do -while cycle, but i will
+	// leave this one for now
+	//
+	// this one is really wrong, tomorrow I will fix it.
+	public void discardCardAgain() {
+		while (true) {
+			print("\nWould you like to change another Card? yes / no");
+			anotherCard = sc.next();
+			if (anotherCard.toLowerCase().equals("yes")) {
+				discardCard();
+			} else if (anotherCard.toLowerCase().equals("no")) {
+				playAgain();
+				break;
+			} else {
+				System.out.print("Didin't catch that. Please try again..");
+				continue;
+			}
+		}
+	}
+
+	public int royalFLush() {
+		int count = 0;
+		if ((sortedHand().get(0).getRank() == 1) && (sortedHand().get(1).getRank() == 10)
+				&& (sortedHand().get(2).getRank() == 11) && (sortedHand().get(3).getRank() == 12)
+				&& (sortedHand().get(4).getRank() == 13)) {
+			for (int i = 0; i < 4; i++) {
+				if (sortedHand().get(i).getSuit() == sortedHand().get(i + 1).getSuit()) {
+					count++;
+				}
+			}
+		}
+
+		if (count == 4) {
+			return 10;
 		} else {
 			return 0;
 		}
 	}
 
-	public int threeOfAKind() {
+	public int straightFlush() {
 
-		if (hand.get(0).getRank() == hand.get(1).getRank()
-				|| hand.get(1).getRank() == hand.get(2).getRank() && hand.get(1).getRank() == hand.get(2).getRank()
-				|| hand.get(2).getRank() == hand.get(3).getRank() && hand.get(2).getRank() == hand.get(3).getRank()
-				|| hand.get(3).getRank() == hand.get(4).getRank() && hand.get(3).getRank() == hand.get(4).getRank()
-				|| hand.get(4).getRank() == hand.get(5).getRank()) {
-
-			return 1;
-		}
-		return 0;
-	}
-
-	public int straight() {
-
-		for (int i = 1; i < 5; i++) {
-			if (hand.get(i - 1).getRank() != hand.get(i--).getRank()) {
-				return 0;
-			}
-
-		}
-		return 1;
-	}
-
-	public int flush() {
-		for (int i = 0; i < 5; i++) {
-			if (hand.get(i).getSuit() != hand.get(i).getSuit()) {
-				return 0;
+		int countRank = 0;
+		int countSuit = 0;
+		for (int i = 0; i < 4; i++) {
+			if (sortedHand().get(i).getSuit() == sortedHand().get(i + 1).getSuit()) {
+				countSuit++;
+				if ((sortedHand().get(i).getRank() + 1) != sortedHand().get(i + 1).getRank()) {
+					countRank++;
+				}
 			}
 		}
-		return 1;
-	}
 
-	public int fullHouse() {
-		int posibility = 0;
-		for (int i = 0; i < hand.size(); i++) {
-			if (hand.get(i - 1).getRank() == hand.get(i--).getRank()) {
-				posibility++;
-			}
-		}
-		if (posibility == 3) {
-			return 1;
+		if (countSuit == 4 && countRank > 0) {
+			return 9;
 		} else {
 			return 0;
 		}
 	}
 
 	public int fourOfaKind() {
-		if (hand.get(0).getRank() != hand.get(3).getRank() && hand.get(1).getRank() != hand.get(4).getRank()) {
-			return 0;
+		int posibility = 0;
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				if ((sortedHand().get(i).getRank() == (sortedHand().get(j).getRank())) && (i != j))
+					posibility++;
+			}
+		}
+		if (posibility == 3) {
+			return 8;
 		} else {
-			return 1;
+			return 0;
 		}
 	}
 
-	public int straightFlush() {
+	public int fullHouse() {
+		int posibility = 0;
+		List<Integer> Rank = new ArrayList<Integer>();
+		for (int j = 0; j < 4; j++) {
 
-		for (int i = 0; i < hand.size(); i++) {
-			if (hand.get(0).getSuit() != hand.get(i).getSuit()) {
-				return 0;
+			if (sortedHand().get(j).getRank() == sortedHand().get(j + 1).getRank()) {
+				Rank.add(sortedHand().get(j).getRank());
+				posibility++;
 			}
 		}
-		for (int i = 0; i < hand.size(); i++) {
-			if (hand.get(i - 1).getRank() != (hand.get(i - 1).getRank())) {
-				return 0;
+
+		if (posibility == 3 && (Rank.get(0) == Rank.get(1) && Rank.get(1) != Rank.get(2)))
+
+		{
+			return 7;
+		} else {
+			return 0;
+		}
+	}
+
+	public int flush() {
+		int countRank = 0;
+		int countSuit = 0;
+		for (int i = 0; i < 4; i++) {
+			if (sortedHand().get(i).getSuit() == sortedHand().get(i + 1).getSuit()) {
+				countSuit++;
+				if ((sortedHand().get(i).getRank() + 1) != sortedHand().get(i + 1).getRank()) {
+					countRank++;
+				}
 			}
 		}
+
+		if (countSuit == 4 && countRank > 0) {
+			return 6;
+		} else {
+			return 0;
+		}
+	}
+
+	public int straight() {
+		int countRank = 0;
+		int countSuit = 0;
+		for (int i = 0; i < 4; i++) {
+			if ((sortedHand().get(i).getRank() + 1) == sortedHand().get(i + 1).getRank()) {
+				countRank++;
+				if (sortedHand().get(i).getSuit() != sortedHand().get(i + 1).getSuit()) {
+					countSuit++;
+				}
+			}
+		}
+
+		if (countRank == 4 && countSuit > 0) {
+			return 5;
+		} else {
+			return 0;
+		}
+	}
+
+	public int threeOfAKind() {
+		if (sortedHand().get(0).getRank() == sortedHand().get(1).getRank()
+				&& sortedHand().get(1).getRank() == sortedHand().get(2).getRank()
+				|| sortedHand().get(2).getRank() == sortedHand().get(3).getRank()
+						&& sortedHand().get(3).getRank() == sortedHand().get(4).getRank()) {
+			return 4;
+		} else {
+			return 0;
+		}
+	}
+
+	public int twoPair() {
+		int count = 0;
+		for (int i = 0; i < 4; i++) {
+			if (sortedHand().get(i).getRank() == sortedHand().get(i + 1).getRank()) {
+				count++;
+			}
+		}
+		if (count == 2) {
+			return 3;
+		} else {
+			return 0;
+		}
+	}
+
+	public int jacksOrBetter() {
+		sortedHand();
+		int count = 0;
+		for (int j = 0; j < 5; j++) {
+
+			if (sortedHand().get(j).getRank() == 10) {
+				count++;
+			} else if (sortedHand().get(j).getRank() == 11) {
+				count++;
+			} else if (sortedHand().get(j).getRank() == 12) {
+				count++;
+			}
+			if (count >= 1) {
+				return 2;
+			}
+		}
+		return 0;
+	}
+
+	public int allOther() {
 		return 1;
 	}
 
-	public int royalFLush() {
-		if (hand.get(0).getRank().equals("1") && hand.get(1).getRank().equals("10")
-				&& hand.get(2).getRank().equals("11") && hand.get(3).getRank().equals("12")
-				&& hand.get(4).getRank().equals("13")) {
-			return 1;
-		} else {
-			return 0;
-		}
-	}
-
-	// Del to jog variacijos neveikia, patikrinimas irgi kolkas neveikia;
+	// evaluating hand
 	public String evaluateHand() {
 		String evaluationHand = "";
 
-		if (royalFLush() == 1) {
-			evaluationHand = "Royal Flush";
+		if (royalFLush() == 10) {
+			evaluationHand = "Royal Flush" + "\nWou won " + winningSum[9] + " Cent";
 			return evaluationHand;
 		}
-		if (straightFlush() == 1) {
-			evaluationHand = "Straight Flush";
+		if (straightFlush() == 9) {
+			evaluationHand = "Straight Flush" + "\nWou won " + winningSum[8] + " Cent";
 			return evaluationHand;
 		}
-		if (fourOfaKind() == 1) {
-			evaluationHand = "Four of a Kind";
+		if (fourOfaKind() == 8) {
+			evaluationHand = "Four of a Kind" + "\nWou won " + winningSum[7] + " Cent";
 			return evaluationHand;
 		}
-		if (fullHouse() == 1) {
-			evaluationHand = "Full House";
+		if (fullHouse() == 7) {
+			evaluationHand = "Full House" + "\nWou won " + winningSum[6] + " Cent";
 			return evaluationHand;
 		}
-		if (flush() == 1) {
-			evaluationHand = "Flush";
+		if (flush() == 6) {
+			evaluationHand = "Flush" + "\nWou won " + winningSum[5] + " Cent";
 			return evaluationHand;
 		}
-		if (straight() == 1) {
-			evaluationHand = "Straight";
+		if (straight() == 5) {
+			evaluationHand = "Straight" + "\nWou won " + winningSum[4] + " Cent";
 			return evaluationHand;
 		}
-		if (threeOfAKind() == 1) {
-			evaluationHand = "Three of a Kind";
+		if (threeOfAKind() == 4) {
+			evaluationHand = "Three of a Kind" + "\nWou won " + winningSum[3] + " Cent";
 			return evaluationHand;
 		}
-		if (twoPair() == 1) {
-			evaluationHand = "2 Pair";
+		if (twoPair() == 3) {
+			evaluationHand = "2 Pair" + "\nWou won " + winningSum[2] + " Cent";
 			return evaluationHand;
 		}
-		if (jacksOrBetter() == 1) {
-			evaluationHand = "Jack or Better";
+		if (jacksOrBetter() == 2) {
+			evaluationHand = "Jack or Better" + "\nWou won " + winningSum[1] + " Cent";
+			return evaluationHand;
+		}
+		if (allOther() == 1) {
+			evaluationHand = "All Other" + "\nWou won " + winningSum[0] + " Cent";
 			return evaluationHand;
 		}
 		return evaluationHand;
 	}
 
+	public void playAgain() {
+		print("Do you wish to play again? yes / no");
+		String playAgain = sc.nextLine();
+
+		if (playAgain.toLowerCase().equals("yes")) {
+			card = null;
+			play();
+		}
+	}
+
+	// displays winning table
 	public void displayWinningTable() {
 		print("Payout Table \n----------------------");
 		for (int payout = 0; payout < winningSum.length; payout++) {
@@ -248,6 +337,7 @@ public class Hand {
 		}
 	}
 
+	// shortcut for printing
 	public void print(String string) {
 		System.out.println(string);
 	}
