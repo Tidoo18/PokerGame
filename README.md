@@ -4,7 +4,7 @@
 Card =  keeps ranks and suits.
 Deck = makes deck, has few methods, deal, draw etc. the last one in the class dosen't do anything. forgot to remove.
 Main = starts the game
-Hand =  checks for hand. This class keeps, table method, main play method, sorts out hand and keeps discardCard method(which I haven't finished.) few more.
+Hand =  checks for hand. This class keeps, table method, main play method, sorts out hand and change card method.
 
 In general, game works, there is still so much more that can be done.
 
